@@ -1,8 +1,11 @@
 <template>
   <div class="container" style="margin-top:7.5em;">
     <div>
-    <!-- UI for creating new items -->
-    <h2>Lista de compras</h2>
+      <div style="display:flex;justify-content: center;"> 
+      <button v-if="showInstallButton" class="btn btn-outline-primary" @click="installApp">Instalar App para o ecrã principal</button>
+    </div> 
+      <!-- UI for creating new items -->
+      <h2>Lista de compras</h2>
     <form @submit.prevent="createItem">
       <div class="form-group" style="margin-top: 1em;
     margin-bottom: 2em;">
@@ -54,7 +57,9 @@ export default {
         id: null,
         name: "",
         price: null
-      }
+      },
+       // Define the showInstallButton property
+       showInstallButton: false,
     };
   },
   // Use the created() lifecycle hook to retrieve existing items from localStorage
@@ -70,6 +75,18 @@ export default {
       return this.items.reduce((sum, item) => sum + parseFloat(item.price), 0);
     }
   },
+
+  mounted() {
+  window.addEventListener('beforeinstallprompt', (event) => {
+    // Prevent Chrome 67 and earlier from automatically showing the prompt
+    event.preventDefault();
+    // Stash the event so it can be triggered later.
+    this.deferredPrompt = event;
+    // Update UI to notify the user they can add to home screen
+    this.showInstallButton = true;
+  });
+},
+
   methods: {
     // Method to create a new item
     createItem() {
@@ -93,7 +110,27 @@ export default {
       this.items.splice(index, 1);
       // Save the updated items array to localStorage
       localStorage.setItem("items", JSON.stringify(this.items));
-    }
+    },
+
+    installApp() {
+      if (this.deferredPrompt) {
+    // Show the install prompt
+    this.deferredPrompt.prompt();
+    // Wait for the user to respond to the prompt
+    this.deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+      } else {
+        console.log('User dismissed the install prompt');
+      }
+      // Clear the deferredPrompt variable
+      this.deferredPrompt = null;
+      // Hide the install button
+      this.showInstallButton = false;
+    });
+  }
+  }
+
   }
 };
 </script>

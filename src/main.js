@@ -4,5 +4,6 @@ import "bootstrap/dist/css/bootstrap.min.css"
 import "bootstrap"
 
 import './assets/main.css'
+import './registerServiceWorker'
 
 createApp(App).mount('#app')
